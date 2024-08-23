@@ -47,6 +47,8 @@ void OnMouseLeftDown(int a_mixed_key, POINT a_pos)
 
         if (ap_data->moveData[y][x]) {
             if (ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] == W_King || ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] == B_King) ap_data->is_king_moved[ap_data->turn] = true;
+            if (ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] == W_Rook || ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] == B_Rook)
+                if (ap_data->selected_piece.x == 0) ap_data->is_rook_moved[ap_data->turn][ap_data->selected_piece.x % 2];
             ap_data->boardData[y][x] = ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x];
             ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] = blank;
             memset(&ap_data->moveData, blank, sizeof(INT8) * 8 * 8);
@@ -165,19 +167,23 @@ int main()
 void drawboard()
 {
     pGameData ap_data = (pGameData)GetAppData();
+    INT16 boardX;
+    INT16 boardY;
 
-    Rectangle(0, 0, PADDING * 2 + ELEMENTS_SIZE * 8, PADDING * 2 + ELEMENTS_SIZE * 8);
+    Rectangle(0, 0, PADDING * 2 + ELEMENTS_SIZE * 8, PADDING * 3 + ELEMENTS_SIZE * 8, 0x00aaaaaa, 0x00aaaaaa);
     for (int y = 0; y < 8; y++) {
+        boardY = y * ELEMENTS_SIZE + PADDING;
         for (int x = 0; x < 8; x++) {
-            UINT8 boardX = x * ELEMENTS_SIZE + PADDING;
-            UINT8 boardY = y * ELEMENTS_SIZE + PADDING;
+            boardX = x * ELEMENTS_SIZE + PADDING;
 
             if ((x + y) & 1) { SelectBrushObject(RGB(119, 149, 86)); SelectPenObject(RGB(119, 149, 86), 0, PS_SOLID); }
             else { SelectBrushObject(RGB(235, 236, 208)); SelectPenObject(RGB(235, 236, 208), 0, PS_SOLID); }
-            Rectangle(boardX, boardY, ELEMENTS_SIZE + boardX, ELEMENTS_SIZE + boardY);
+            Rectangle(boardX, boardY, boardX + ELEMENTS_SIZE, boardY + ELEMENTS_SIZE);
             if (ap_data->boardData[y][x]) DrawImageGP(ap_data->pieces_image[ap_data->boardData[y][x]], boardX, boardY, ELEMENTS_SIZE, ELEMENTS_SIZE);
             if (ap_data->moveData[y][x]) DrawImageGP(ap_data->pieces_image[ap_data->moveData[y][x]], boardX, boardY, ELEMENTS_SIZE, ELEMENTS_SIZE);
+            if (y == 7) TextOut(ELEMENTS_SIZE * (x + 0.6), ELEMENTS_SIZE * 8 + PADDING, "%c", 'A' + x);
         }
+        TextOut(0, ELEMENTS_SIZE * (y + 0.5), "%c", '8' - y);
     }
 
     ShowDisplay();
