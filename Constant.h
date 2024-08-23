@@ -29,7 +29,7 @@ const INT8 initialBoard[8][8] = { { B_Rook, B_Knight, B_Bishop, B_Queen, B_King,
 								  { W_Rook, W_Knight, W_Bishop, W_Queen, W_King, W_Bishop, W_Knight, W_Rook } 
 								};
 
-#define BOARD_SIZE (45)
-#define PADDING BOARD_SIZE / (5)
+#define ELEMENTS_SIZE (45)
+#define PADDING ELEMENTS_SIZE / (5)
 
 #endif // !__CONSTANT_H__

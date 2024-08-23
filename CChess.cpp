@@ -28,14 +28,16 @@ void InitWindow()
 
 void drawboard();
 void readImages();
+void BRQ_piece_move(LONG, LONG, INT8, INT8);
+void N_piece_move(LONG, LONG, INT8, INT8);
 
 INT8 g_clicked_flag = 0;
 
 void OnMouseLeftDown(int a_mixed_key, POINT a_pos)
 {
     g_clicked_flag = 1;
-    LONG x = a_pos.x / BOARD_SIZE;
-    LONG y = a_pos.y / BOARD_SIZE;
+    LONG x = a_pos.x / ELEMENTS_SIZE;
+    LONG y = a_pos.y / ELEMENTS_SIZE;
     int i;
 
     pGameData ap_data = (pGameData)GetAppData();
@@ -73,63 +75,39 @@ void OnMouseLeftDown(int a_mixed_key, POINT a_pos)
                 break;
             case W_Bishop:
             case B_Bishop:
-                for (i = 1; y - i >= 0 && x - i >= 0 && ap_data->boardData[y - i][x - i] == blank; i++) ap_data->moveData[y - i][x - i] = Move;
-                if (y - i >= 0 && x - i >= 0 && ap_data->boardData[y - i][x - i] % 2 != ap_data->turn) ap_data->moveData[y - i][x - i] = Attack;
-                for (i = 1; y + i < 8 && x + i < 8 && ap_data->boardData[y + i][x + i] == blank; i++) ap_data->moveData[y + i][x + i] = Move;
-                if (y + i < 8 && x + i < 8 && ap_data->boardData[y + i][x + i] % 2 != ap_data->turn) ap_data->moveData[y + i][x + i] = Attack;
-                for (i = 1; y - i >= 0 && x + i < 8 && ap_data->boardData[y - i][x + i] == blank; i++) ap_data->moveData[y - i][x + i] = Move;
-                if (y - i >= 0 && x + i < 8 && ap_data->boardData[y - i][x + i] % 2 != ap_data->turn) ap_data->moveData[y - i][x + i] = Attack;
-                for (i = 1; y + i < 8 && x - i >= 0 && ap_data->boardData[y + i][x - i] == blank; i++) ap_data->moveData[y + i][x - i] = Move;
-                if (y + i < 8 && x - i >= 0 && ap_data->boardData[y + i][x - i] % 2 != ap_data->turn) ap_data->moveData[y + i][x - i] = Attack;
+                BRQ_piece_move(x, y, -1, -1);
+                BRQ_piece_move(x, y, 1, 1);
+                BRQ_piece_move(x, y, -1, 1);
+                BRQ_piece_move(x, y, 1, -1);
                 break;
             case W_Knight:
             case B_Knight:
-                if (y - 2 >= 0 && x - 1 >= 0 && ap_data->boardData[y - 2][x - 1] == blank) ap_data->moveData[y - 2][x - 1] = Move;
-                else if (y - 2 >= 0 && x - 1 >= 0 && ap_data->boardData[y - 2][x - 1] % 2 != ap_data->turn) ap_data->moveData[y - 2][x - 1] = Attack;
-                if (y - 2 >= 0 && x + 1 < 8 && ap_data->boardData[y - 2][x + 1] == blank) ap_data->moveData[y - 2][x + 1] = Move;
-                else if (y - 2 >= 0 && x + 1 < 8 && ap_data->boardData[y - 2][x + 1] % 2 != ap_data->turn) ap_data->moveData[y - 2][x + 1] = Attack;
-                if (y + 2 < 8 && x - 1 >= 0 && ap_data->boardData[y + 2][x - 1] == blank) ap_data->moveData[y + 2][x - 1] = Move;
-                else if (y + 2 < 8 && x - 1 >= 0 && ap_data->boardData[y + 2][x - 1] % 2 != ap_data->turn) ap_data->moveData[y + 2][x - 1] = Attack;
-                if (y + 2 < 8 && x + 1 < 8 && ap_data->boardData[y + 2][x + 1] == blank) ap_data->moveData[y + 2][x + 1] = Move;
-                else if (y + 2 < 8 && x + 1 < 8 && ap_data->boardData[y + 2][x + 1] % 2 != ap_data->turn) ap_data->moveData[y + 2][x + 1] = Attack;
-                if (y - 1 >= 0 && x - 2 >= 0 && ap_data->boardData[y - 1][x - 2] == blank) ap_data->moveData[y - 1][x - 2] = Move;
-                else if (y - 1 >= 0 && x - 2 >= 0 && ap_data->boardData[y - 1][x - 2] % 2 != ap_data->turn) ap_data->moveData[y - 1][x - 2] = Attack;
-                if (y - 1 >= 0 && x + 2 < 8 && ap_data->boardData[y - 1][x + 2] == blank) ap_data->moveData[y - 1][x + 2] = Move;
-                else if (y - 1 >= 0 && x + 2 < 8 && ap_data->boardData[y - 1][x + 2] % 2 != ap_data->turn) ap_data->moveData[y - 1][x + 2] = Attack;
-                if (y + 1 < 8 && x - 2 >= 0 && ap_data->boardData[y + 1][x - 2] == blank) ap_data->moveData[y + 1][x - 2] = Move;
-                else if (y + 1 < 8 && x - 2 >= 0 && ap_data->boardData[y + 1][x - 2] % 2 != ap_data->turn) ap_data->moveData[y + 1][x - 2] = Attack;
-                if (y + 1 < 8 && x + 2 < 8 && ap_data->boardData[y + 1][x + 2] == blank) ap_data->moveData[y + 1][x + 2] = Move;
-                else if (y + 1 < 8 && x + 2 < 8 && ap_data->boardData[y + 1][x + 2] % 2 != ap_data->turn) ap_data->moveData[y + 1][x + 2] = Attack;
+                N_piece_move(x, y, -1, -2);
+                N_piece_move(x, y, 1, -2);
+                N_piece_move(x, y, -1, 2);
+                N_piece_move(x, y, 1, 2);
+                N_piece_move(x, y, -2, -1);
+                N_piece_move(x, y, 2, -1);
+                N_piece_move(x, y, -2, 1);
+                N_piece_move(x, y, 2, 1);
                 break;
             case W_Rook:
             case B_Rook:
-                for (i = 1; x - i >= 0 && ap_data->boardData[y][x - i] == blank; i++) ap_data->moveData[y][x - i] = Move;
-                if (x - i >= 0 && ap_data->boardData[y][x - i] % 2 != ap_data->turn) ap_data->moveData[y][x - i] = Attack;
-                for (i = 1; x + i < 8 && ap_data->boardData[y][x + i] == blank; i++) ap_data->moveData[y][x + i] = Move;
-                if (x + i < 8 && ap_data->boardData[y][x + i] % 2 != ap_data->turn) ap_data->moveData[y][x + i] = Attack;
-                for (i = 1; y - i >= 0 && ap_data->boardData[y - i][x] == blank; i++) ap_data->moveData[y - i][x] = Move;
-                if (y - i >= 0 && ap_data->boardData[y - i][x] % 2 != ap_data->turn) ap_data->moveData[y - i][x] = Attack;
-                for (i = 1; y + i < 8 && ap_data->boardData[y + i][x] == blank; i++) ap_data->moveData[y + i][x] = Move;
-                if (y + i < 8 && ap_data->boardData[y + i][x] % 2 != ap_data->turn) ap_data->moveData[y + i][x] = Attack;
+                BRQ_piece_move(x, y, -1, 0);
+                BRQ_piece_move(x, y, 1, 0);
+                BRQ_piece_move(x, y, 0, -1);
+                BRQ_piece_move(x, y, 0, 1);
                 break;
             case W_Queen:
             case B_Queen:
-                for (i = 1; y - i >= 0 && x - i >= 0 && ap_data->boardData[y - i][x - i] == blank; i++) ap_data->moveData[y - i][x - i] = Move;
-                if (y - i >= 0 && x - i >= 0 && ap_data->boardData[y - i][x - i] % 2 != ap_data->turn) ap_data->moveData[y - i][x - i] = Attack;
-                for (i = 1; y + i < 8 && x + i < 8 && ap_data->boardData[y + i][x + i] == blank; i++) ap_data->moveData[y + i][x + i] = Move;
-                if (y + i < 8 && x + i < 8 && ap_data->boardData[y + i][x + i] % 2 != ap_data->turn) ap_data->moveData[y + i][x + i] = Attack;
-                for (i = 1; y - i >= 0 && x + i < 8 && ap_data->boardData[y - i][x + i] == blank; i++) ap_data->moveData[y - i][x + i] = Move;
-                if (y - i >= 0 && x + i < 8 && ap_data->boardData[y - i][x + i] % 2 != ap_data->turn) ap_data->moveData[y - i][x + i] = Attack;
-                for (i = 1; y + i < 8 && x - i >= 0 && ap_data->boardData[y + i][x - i] == blank; i++) ap_data->moveData[y + i][x - i] = Move;
-                if (y + i < 8 && x - i >= 0 && ap_data->boardData[y + i][x - i] % 2 != ap_data->turn) ap_data->moveData[y + i][x - i] = Attack;
-                for (i = 1; x - i >= 0 && ap_data->boardData[y][x - i] == blank; i++) ap_data->moveData[y][x - i] = Move;
-                if (x - i >= 0 && ap_data->boardData[y][x - i] % 2 != ap_data->turn) ap_data->moveData[y][x - i] = Attack;
-                for (i = 1; x + i < 8 && ap_data->boardData[y][x + i] == blank; i++) ap_data->moveData[y][x + i] = Move;
-                if (x + i < 8 && ap_data->boardData[y][x + i] % 2 != ap_data->turn) ap_data->moveData[y][x + i] = Attack;
-                for (i = 1; y - i >= 0 && ap_data->boardData[y - i][x] == blank; i++) ap_data->moveData[y - i][x] = Move;
-                if (y - i >= 0 && ap_data->boardData[y - i][x] % 2 != ap_data->turn) ap_data->moveData[y - i][x] = Attack;
-                for (i = 1; y + i < 8 && ap_data->boardData[y + i][x] == blank; i++) ap_data->moveData[y + i][x] = Move;
-                if (y + i < 8 && ap_data->boardData[y + i][x] % 2 != ap_data->turn) ap_data->moveData[y + i][x] = Attack;
+                BRQ_piece_move(x, y, -1, -1);
+                BRQ_piece_move(x, y, 1, 1);
+                BRQ_piece_move(x, y, -1, 1);
+                BRQ_piece_move(x, y, 1, -1);
+                BRQ_piece_move(x, y, -1, 0);
+                BRQ_piece_move(x, y, 1, 0);
+                BRQ_piece_move(x, y, 0, -1);
+                BRQ_piece_move(x, y, 0, 1);
                 break;
             case W_King:
             case B_King:
@@ -162,10 +140,10 @@ void OnMouseMove(int a_mixed_key, POINT a_pos)
     }
     Rectangle(400, 10, 500, 100, 0x00aaaaaa, 0x00aaaaaa);
     TextOut(400, 10, "%d, %d", a_pos.x, a_pos.y);
-    TextOut(400, 30, "%d, %d", a_pos.x / BOARD_SIZE, a_pos.y / BOARD_SIZE);
+    TextOut(400, 30, "%d, %d", a_pos.x / ELEMENTS_SIZE, a_pos.y / ELEMENTS_SIZE);
     TextOut(400, 70, "%d | %d, %d", ap_data->turn, ap_data->is_king_moved[1], ap_data->is_king_moved[0]);
-    if (a_pos.x / BOARD_SIZE < 8 && a_pos.y / BOARD_SIZE < 8)TextOut(400, 50, "%d", ap_data->boardData[a_pos.y / BOARD_SIZE][a_pos.x / BOARD_SIZE]);
-    ShowDisplay(); // 정보를 윈도우에 출력한다.
+    if (a_pos.x / ELEMENTS_SIZE < 8 && a_pos.y / ELEMENTS_SIZE < 8)TextOut(400, 50, "%d", ap_data->boardData[a_pos.y / ELEMENTS_SIZE][a_pos.x / ELEMENTS_SIZE]);
+    ShowDisplay();
 }
 
 MOUSE_MESSAGE(OnMouseLeftDown, OnMouseLeftUP, OnMouseMove)
@@ -188,17 +166,21 @@ void drawboard()
 {
     pGameData ap_data = (pGameData)GetAppData();
 
+    Rectangle(0, 0, PADDING * 2 + ELEMENTS_SIZE * 8, PADDING * 2 + ELEMENTS_SIZE * 8);
     for (int y = 0; y < 8; y++) {
         for (int x = 0; x < 8; x++) {
+            UINT8 boardX = x * ELEMENTS_SIZE + PADDING;
+            UINT8 boardY = y * ELEMENTS_SIZE + PADDING;
+
             if ((x + y) & 1) { SelectBrushObject(RGB(119, 149, 86)); SelectPenObject(RGB(119, 149, 86), 0, PS_SOLID); }
             else { SelectBrushObject(RGB(235, 236, 208)); SelectPenObject(RGB(235, 236, 208), 0, PS_SOLID); }
-            Rectangle(x * BOARD_SIZE, y * BOARD_SIZE, BOARD_SIZE + (x * BOARD_SIZE), BOARD_SIZE + (y * BOARD_SIZE));
-            if (ap_data->boardData[y][x]) DrawImageGP(ap_data->pieces_image[ap_data->boardData[y][x]], x * BOARD_SIZE, y * BOARD_SIZE, BOARD_SIZE, BOARD_SIZE);
-            if (ap_data->moveData[y][x]) DrawImageGP(ap_data->pieces_image[ap_data->moveData[y][x]], x * BOARD_SIZE, y * BOARD_SIZE, BOARD_SIZE, BOARD_SIZE);
+            Rectangle(boardX, boardY, ELEMENTS_SIZE + boardX, ELEMENTS_SIZE + boardY);
+            if (ap_data->boardData[y][x]) DrawImageGP(ap_data->pieces_image[ap_data->boardData[y][x]], boardX, boardY, ELEMENTS_SIZE, ELEMENTS_SIZE);
+            if (ap_data->moveData[y][x]) DrawImageGP(ap_data->pieces_image[ap_data->moveData[y][x]], boardX, boardY, ELEMENTS_SIZE, ELEMENTS_SIZE);
         }
     }
 
-    ShowDisplay(); // 정보를 윈도우에 출력한다.
+    ShowDisplay();
 }
 
 void readImages()
@@ -221,4 +203,21 @@ void readImages()
 
     ap_data->pieces_image[Attack]   = LoadImageGP(".\\pieces\\Attack.png");
     ap_data->pieces_image[Move]      = LoadImageGP(".\\pieces\\Way.png");
+}
+
+void BRQ_piece_move(LONG x, LONG y, INT8 x_pos, INT8 y_pos)
+{
+    int i; 
+    pGameData ap_data = (pGameData)GetAppData();
+
+    for (i = 1; x + (i * x_pos) >= 0 && x + (i * x_pos) < 8 && y + (i * y_pos) >= 0 && y + (i * y_pos) < 8 && ap_data->boardData[y + (i * y_pos)][x + (i * x_pos)] == blank; i++) ap_data->moveData[y + (i * y_pos)][x + (i * x_pos)] = Move;
+    if (x + (i * x_pos) >= 0 && x + (i * x_pos) < 8 && y + (i * y_pos) >= 0 && y + (i * y_pos) < 8 && ap_data->boardData[y + (i * y_pos)][x + (i * x_pos)] % 2 != ap_data->turn) ap_data->moveData[y + (i * y_pos)][x + (i * x_pos)] = Attack;
+}
+
+void N_piece_move(LONG x, LONG y, INT8 x_pos, INT8 y_pos)
+{
+    pGameData ap_data = (pGameData)GetAppData();
+
+    if (x + x_pos >= 0 && x + x_pos < 8 && y + y_pos >= 0 && y + y_pos < 8 && ap_data->boardData[y + y_pos][x + x_pos] == blank) ap_data->moveData[y + y_pos][x + x_pos] = Move;
+    else if (x + x_pos >= 0 && x + x_pos < 8 && y + y_pos >= 0 && y + y_pos < 8 && ap_data->boardData[y + y_pos][x + x_pos] % 2 != ap_data->turn) ap_data->moveData[y + y_pos][x + x_pos] = Attack;
 }
