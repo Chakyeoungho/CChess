@@ -8,11 +8,12 @@
 typedef struct GameData {
     INT8 boardData[8][8];
     INT8 moveData[8][8];
+    INT8 attackData[2][8][8];
+    UINT8 turn : 1;
+    POINT selected_piece;
     bool is_king_moved[2];
     bool is_rook_moved[2][2];
     bool is_pawn_moved2[2][8];
-    UINT8 turn : 1;
-    POINT selected_piece;
     void *pieces_image[15];
 } Gamedata, *pGameData;
 #pragma pack(pop)
@@ -26,6 +27,7 @@ void InitWindow()
     g_wnd_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN;
 }
 
+void initialize();
 void drawboard();
 void readImages();
 void BRQ_piece_move(LONG, LONG, INT8, INT8);
@@ -36,9 +38,8 @@ INT8 g_clicked_flag = 0;
 void OnMouseLeftDown(int a_mixed_key, POINT a_pos)
 {
     g_clicked_flag = 1;
-    LONG x = a_pos.x / ELEMENTS_SIZE;
-    LONG y = a_pos.y / ELEMENTS_SIZE;
-    int i;
+    LONG x = (a_pos.x - PADDING) / ELEMENTS_SIZE;
+    LONG y = (a_pos.y - PADDING) / ELEMENTS_SIZE;
 
     pGameData ap_data = (pGameData)GetAppData();
 
@@ -47,12 +48,76 @@ void OnMouseLeftDown(int a_mixed_key, POINT a_pos)
 
         if (ap_data->moveData[y][x]) {
             if (ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] == W_King || ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] == B_King) ap_data->is_king_moved[ap_data->turn] = true;
-            if (ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] == W_Rook || ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] == B_Rook)
-                if (ap_data->selected_piece.x == 0) ap_data->is_rook_moved[ap_data->turn][ap_data->selected_piece.x % 2];
+            if (ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] == W_Rook || ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] == B_Rook) ap_data->is_rook_moved[ap_data->turn][ap_data->selected_piece.x % 2] = true;
+
             ap_data->boardData[y][x] = ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x];
             ap_data->boardData[ap_data->selected_piece.y][ap_data->selected_piece.x] = blank;
             memset(&ap_data->moveData, blank, sizeof(INT8) * 8 * 8);
             ap_data->turn++;
+
+            for (int at_y = 0; at_y < 8; at_y++) {
+                for (int at_x = 0; at_x < 8; at_x++) {
+                    switch (ap_data->boardData[at_y][at_x])
+                    {
+                    case W_Pawn:
+                        if (at_x + 1 < 8 && at_y > 0 && ap_data->boardData[at_y - 1][at_x + 1] % 2 != ap_data->turn && ap_data->boardData[at_y - 1][at_x + 1] != blank) ap_data->attackData[ap_data->turn][at_y - 1][at_x + 1]++;
+                        if (at_x > 0 && at_y > 0 && ap_data->boardData[at_y - 1][at_x - 1] != ap_data->turn && ap_data->boardData[at_y - 1][at_x - 1] != blank) ap_data->attackData[ap_data->turn][at_y - 1][at_x - 1]++;
+                        break;
+                    case B_Pawn:
+                        if (at_x + 1 < 8 && at_y < 7 && ap_data->boardData[at_y + 1][at_x + 1] % 2 != ap_data->turn) ap_data->attackData[ap_data->turn][at_y + 1][at_x + 1]++;
+                        if (at_x > 0 && at_y < 7 && ap_data->boardData[at_y + 1][at_x - 1] % 2 != ap_data->turn) ap_data->attackData[ap_data->turn][at_y + 1][at_x - 1]++;
+                        break;
+                    case W_Bishop:
+                    case B_Bishop:
+                        BRQ_piece_move(at_x, at_y, -1, -1);
+                        BRQ_piece_move(at_x, at_y, 1, 1);
+                        BRQ_piece_move(at_x, at_y, -1, 1);
+                        BRQ_piece_move(at_x, at_y, 1, -1);
+                        break;
+                    case W_Knight:
+                    case B_Knight:
+                        N_piece_move(at_x, at_y, -1, -2);
+                        N_piece_move(at_x, at_y, 1, -2);
+                        N_piece_move(at_x, at_y, -1, 2);
+                        N_piece_move(at_x, at_y, 1, 2);
+                        N_piece_move(at_x, at_y, -2, -1);
+                        N_piece_move(at_x, at_y, 2, -1);
+                        N_piece_move(at_x, at_y, -2, 1);
+                        N_piece_move(at_x, at_y, 2, 1);
+                        break;
+                    case W_Rook:
+                    case B_Rook:
+                        BRQ_piece_move(at_x, at_y, -1, 0);
+                        BRQ_piece_move(at_x, at_y, 1, 0);
+                        BRQ_piece_move(at_x, at_y, 0, -1);
+                        BRQ_piece_move(at_x, at_y, 0, 1);
+                        break;
+                    case W_Queen:
+                    case B_Queen:
+                        BRQ_piece_move(at_x, at_y, -1, -1);
+                        BRQ_piece_move(at_x, at_y, 1, 1);
+                        BRQ_piece_move(at_x, at_y, -1, 1);
+                        BRQ_piece_move(at_x, at_y, 1, -1);
+                        BRQ_piece_move(at_x, at_y, -1, 0);
+                        BRQ_piece_move(at_x, at_y, 1, 0);
+                        BRQ_piece_move(at_x, at_y, 0, -1);
+                        BRQ_piece_move(at_x, at_y, 0, 1);
+                        break;
+                    case W_King:
+                    case B_King:
+                        for (int i = -1; i <= 1; i++)
+                            for (int j = -1; j <= 1; j++) {
+                                if (at_y + i < 0 || at_y + i >= 8 || at_x + j < 0 || at_x + j >= 8) continue;
+                                else if (ap_data->boardData[at_y + i][at_x + j] == blank) ap_data->moveData[at_y + i][at_x + j] = Move;
+                                else if (ap_data->boardData[at_y + i][at_x + j] % 2 != ap_data->turn) ap_data->moveData[at_y + i][at_x + j] = Attack;
+                            }
+
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            }
         } else if (ap_data->turn == ap_data->boardData[y][x] % 2) {
             ap_data->selected_piece.x = x;
             ap_data->selected_piece.y = y;
@@ -113,12 +178,13 @@ void OnMouseLeftDown(int a_mixed_key, POINT a_pos)
                 break;
             case W_King:
             case B_King:
-                for (int j = -1; j <= 1; j++)
-                    for (int k = -1; k <= 1; k++) {
-                        if (y + j < 0 || y + j >= 8 || x + k < 0 || x + k >= 8) continue;
-                        else if (ap_data->boardData[y + j][x + k] == blank) ap_data->moveData[y + j][x + k] = Move;
-                        else if (ap_data->boardData[y + j][x + k] % 2 != ap_data->turn) ap_data->moveData[y + j][x + k] = Attack;
+                for (int i = -1; i <= 1; i++)
+                    for (int j = -1; j <= 1; j++) {
+                        if (y + i < 0 || y + i >= 8 || x + j < 0 || x + j >= 8) continue;
+                        else if (ap_data->boardData[y + i][x + j] == blank) ap_data->moveData[y + i][x + j] = Move;
+                        else if (ap_data->boardData[y + i][x + j] % 2 != ap_data->turn) ap_data->moveData[y + i][x + j] = Attack;
                     }
+
                 break;
             default:
                 break;
@@ -142,9 +208,8 @@ void OnMouseMove(int a_mixed_key, POINT a_pos)
     }
     Rectangle(400, 10, 500, 100, 0x00aaaaaa, 0x00aaaaaa);
     TextOut(400, 10, "%d, %d", a_pos.x, a_pos.y);
-    TextOut(400, 30, "%d, %d", a_pos.x / ELEMENTS_SIZE, a_pos.y / ELEMENTS_SIZE);
-    TextOut(400, 70, "%d | %d, %d", ap_data->turn, ap_data->is_king_moved[1], ap_data->is_king_moved[0]);
-    if (a_pos.x / ELEMENTS_SIZE < 8 && a_pos.y / ELEMENTS_SIZE < 8)TextOut(400, 50, "%d", ap_data->boardData[a_pos.y / ELEMENTS_SIZE][a_pos.x / ELEMENTS_SIZE]);
+    TextOut(400, 30, "%d %d %d %d %d %d", ap_data->is_king_moved[0], ap_data->is_king_moved[0], ap_data->is_rook_moved[0][0], ap_data->is_rook_moved[0][1], ap_data->is_rook_moved[1][0], ap_data->is_rook_moved[1][1]);
+    if ((a_pos.x - PADDING) / ELEMENTS_SIZE < 8 && (a_pos.y - PADDING) / ELEMENTS_SIZE < 8) TextOut(400, 50, "%d", ap_data->boardData[(a_pos.y - PADDING) / ELEMENTS_SIZE][(a_pos.x - PADDING) / ELEMENTS_SIZE]);
     ShowDisplay();
 }
 
@@ -152,16 +217,20 @@ MOUSE_MESSAGE(OnMouseLeftDown, OnMouseLeftUP, OnMouseMove)
 
 int main()
 {
+    initialize();
+    readImages();
+    drawboard();
+
+    return 0;
+}
+
+void initialize()
+{
     GameData data = { 0, };
     SetAppData(&data, sizeof(GameData));
     pGameData ap_data = (pGameData)GetAppData();
     memcpy(ap_data->boardData, &initialBoard, sizeof(INT8) * 64);
     ap_data->turn = 1;
-
-    readImages();
-    drawboard();
-
-    return 0;
 }
 
 void drawboard()
